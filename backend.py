@@ -261,50 +261,50 @@ class DigitClassificationDataset(Custom_Dataset):
         x = data['x']
         y = data['label']
 
-        if use_graphics and time.time() - self.last_update > 1:
-            dev_logits = self.model.run(torch.tensor(self.dev_images)).data
-            dev_predicted = np.argmax(dev_logits, axis=1).detach().numpy()
-            dev_probs = np.exp(nn.functional.log_softmax(dev_logits))
+        # if use_graphics and time.time() - self.last_update > 1:
+        #     dev_logits = self.model.run(torch.tensor(self.dev_images)).data
+        #     dev_predicted = np.argmax(dev_logits, axis=1).detach().numpy()
+        #     dev_probs = np.exp(nn.functional.log_softmax(dev_logits))
 
-            dev_accuracy = np.mean(dev_predicted == self.dev_labels)
-            self.status.set_text(
-                    "validation accuracy: "
-                    "{:.2%}".format(
-                        dev_accuracy))
-            for i in range(10):
-                predicted = dev_predicted[self.dev_labels == i]
-                probs = dev_probs[self.dev_labels == i][:, i]
-                linspace = np.linspace(
-                    0, len(probs) - 1, self.samples).astype(int)
-                indices = probs.argsort()[linspace]
-                for j, (prob, image) in enumerate(zip(
-                        probs[indices],
-                        self.dev_images[self.dev_labels == i][indices])):
-                    self.images[i][j].set_data(image.reshape((28, 28)))
-                    left = prob * (self.width - 1) * 28
-                    if predicted[indices[j]] == i:
-                        self.images[i][j].set_cmap("Greens")
-                        self.texts[i][j].set_text("")
-                    else:
-                        self.images[i][j].set_cmap("Reds")
-                        self.texts[i][j].set_text(predicted[indices[j]])
-                        self.texts[i][j].set_x(left + 14)
-                    self.images[i][j].set_extent([left, left + 28, 0, 28])
-            self.fig.canvas.draw_idle()
-            self.fig.canvas.start_event_loop(1e-3)
-            self.last_update = time.time()
+        #     dev_accuracy = np.mean(dev_predicted == self.dev_labels)
+        #     self.status.set_text(
+        #             "validation accuracy: "
+        #             "{:.2%}".format(
+        #                 dev_accuracy))
+        #     for i in range(10):
+        #         predicted = dev_predicted[self.dev_labels == i]
+        #         probs = dev_probs[self.dev_labels == i][:, i]
+        #         linspace = np.linspace(
+        #             0, len(probs) - 1, self.samples).astype(int)
+        #         indices = probs.argsort()[linspace]
+        #         for j, (prob, image) in enumerate(zip(
+        #                 probs[indices],
+        #                 self.dev_images[self.dev_labels == i][indices])):
+        #             self.images[i][j].set_data(image.reshape((28, 28)))
+        #             left = prob * (self.width - 1) * 28
+        #             if predicted[indices[j]] == i:
+        #                 self.images[i][j].set_cmap("Greens")
+        #                 self.texts[i][j].set_text("")
+        #             else:
+        #                 self.images[i][j].set_cmap("Reds")
+        #                 self.texts[i][j].set_text(predicted[indices[j]])
+        #                 self.texts[i][j].set_x(left + 14)
+        #             self.images[i][j].set_extent([left, left + 28, 0, 28])
+        #     self.fig.canvas.draw_idle()
+        #     self.fig.canvas.start_event_loop(1e-3)
+        #     self.last_update = time.time()
         
-            if(self.num_items == len(self.x)):
-                self.current_accuracy = self.num_right_items/len(self.x)
-                self.num_right_items = 0
-                self.epoch += 1
+        #     if(self.num_items == len(self.x)):
+        #         self.current_accuracy = self.num_right_items/len(self.x)
+        #         self.num_right_items = 0
+        #         self.epoch += 1
 
         return {'x': x, 'label': y}
 
     def get_validation_accuracy(self):
         dev_logits = self.model.run(torch.tensor(self.dev_images)).data
         dev_predicted = np.argmax(dev_logits, axis=1).detach().numpy()
-        dev_probs = np.exp(nn.functional.log_softmax(dev_logits))
+        # dev_probs = np.exp(nn.functional.log_softmax(dev_logits))
 
         dev_accuracy = np.mean(dev_predicted == self.dev_labels)
         return dev_accuracy
