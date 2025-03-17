@@ -9,7 +9,7 @@ Please avoid importing any other functions or modules.
 Your code will not pass if the gradescope autograder detects any changed imports
 """
 import torch
-from torch.nn import Parameter, Linear, Sequential, ReLU, MSELoss
+from torch.nn import Parameter, Linear, Sequential, ReLU, MSELoss, CrossEntropyLoss
 from torch import optim, tensor, tensordot, ones, matmul
 from torch.nn.functional import cross_entropy, relu, mse_loss, softmax
 from torch import movedim
@@ -103,8 +103,6 @@ class RegressionModel(Module):
             Linear(32, 1)
         )
 
-
-
     def forward(self, x):
         """
         Runs the model for a batch of examples.
@@ -116,7 +114,6 @@ class RegressionModel(Module):
         """
         return self.model(x)
 
-    
     def get_loss(self, x, y):
         """
         Computes the loss for a batch of examples.
@@ -131,8 +128,6 @@ class RegressionModel(Module):
         predictions = self.forward(x)
         return criterion(predictions, y)
  
-        
-
     def train(self, dataset, epochs=500, batch_size=32, learning_rate=0.01):
         """
         Trains the model.
@@ -167,14 +162,6 @@ class RegressionModel(Module):
                 print(f"Epoch {epoch}: Loss = {total_loss / len(dataloader):.4f}")
 
 
-            
-
-
-
-
-
-
-
 class DigitClassificationModel(Module):
     """
     A model for handwritten digit classification using the MNIST dataset.
@@ -189,16 +176,21 @@ class DigitClassificationModel(Module):
     methods here. We recommend that you implement the RegressionModel before
     working on this part of the project.)
     """
+    "*** YOUR CODE HERE ***"
     def __init__(self):
         # Initialize your model parameters here
         super().__init__()
         input_size = 28 * 28
         output_size = 10
-        "*** YOUR CODE HERE ***"
-
-
-
-
+        # 3 capas
+        self.model = Sequential(
+            Linear(input_size, 128),
+            ReLU(),
+            Linear(128, 64),
+            ReLU(),
+            Linear(64, output_size)
+        )
+       
     def run(self, x):
         """
         Runs the model for a batch of examples.
@@ -214,8 +206,9 @@ class DigitClassificationModel(Module):
                 (also called logits)
         """
         """ YOUR CODE HERE """
-
- 
+        pred = self.model(x)
+        return pred
+        
 
     def get_loss(self, x, y):
         """
@@ -231,16 +224,50 @@ class DigitClassificationModel(Module):
         Returns: a loss tensor
         """
         """ YOUR CODE HERE """
-
-    
-        
+        criterion = CrossEntropyLoss()
+        pred = self.model(x)
+        return criterion(pred, y)
 
     def train(self, dataset):
+        learning_rate = 0.01
+        batch_size = 128
+        epoch = 0
+        wait = 0
+        patience = 3
+        best_va = 0.0
         """
         Trains the model.
         """
         """ YOUR CODE HERE """
+        dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
+        optimizer = optim.Adam(self.parameters(), lr=learning_rate)
+        while (True):
+            total_loss = 0.0
+            
+            for batch in dataloader:
+                x_batch = batch['x'].float()
+                y_batch = batch['label'].float()
 
+                optimizer.zero_grad()
+                loss = self.get_loss(x_batch, y_batch)
+                loss.backward()
+                optimizer.step()
+                total_loss += loss.item()
+            
+            va = dataset.get_validation_accuracy()
+            
+            if va>best_va:
+                best_va = va
+                wait = 0
+            else:
+                wait+=1
+            if va>=0.975 or wait>= patience:
+                print(f"Best Epoch {epoch}: VA: {va:.4f}")
+                break
+            else:
+                print(f"Epoch {epoch}: Loss = {total_loss / len(dataloader):.4f} VA: {va:.4f}")
+            
+            epoch+=1
 
 
 class LanguageIDModel(Module):
@@ -327,8 +354,6 @@ class LanguageIDModel(Module):
         """
         "*** YOUR CODE HERE ***"
 
-        
-
 def Convolve(input: tensor, weight: tensor):
     """
     Acts as a convolution layer by applying a 2d convolution with the given inputs and weights.
@@ -350,8 +375,6 @@ def Convolve(input: tensor, weight: tensor):
     
     "*** End Code ***"
     return Output_Tensor
-
-
 
 class DigitConvolutionalModel(Module):
     """
@@ -414,8 +437,6 @@ class DigitConvolutionalModel(Module):
         Trains the model.
         """
         """ YOUR CODE HERE """
-
-
 
 class Attention(Module):
     def __init__(self, layer_size, block_size):
