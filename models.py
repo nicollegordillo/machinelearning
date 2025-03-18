@@ -9,7 +9,7 @@ Please avoid importing any other functions or modules.
 Your code will not pass if the gradescope autograder detects any changed imports
 """
 import torch
-from torch.nn import Parameter, Linear, Sequential, ReLU, MSELoss
+from torch.nn import Parameter, Linear, Sequential, ReLU, MSELoss, CrossEntropyLoss
 from torch import optim, tensor, tensordot, ones, matmul
 from torch.nn.functional import cross_entropy, relu, mse_loss, softmax
 from torch import movedim
@@ -103,8 +103,6 @@ class RegressionModel(Module):
             Linear(32, 1)
         )
 
-
-
     def forward(self, x):
         """
         Runs the model for a batch of examples.
@@ -116,7 +114,6 @@ class RegressionModel(Module):
         """
         return self.model(x)
 
-    
     def get_loss(self, x, y):
         """
         Computes the loss for a batch of examples.
@@ -131,8 +128,6 @@ class RegressionModel(Module):
         predictions = self.forward(x)
         return criterion(predictions, y)
  
-        
-
     def train(self, dataset, epochs=500, batch_size=32, learning_rate=0.01):
         """
         Trains the model.
@@ -167,14 +162,6 @@ class RegressionModel(Module):
                 print(f"Epoch {epoch}: Loss = {total_loss / len(dataloader):.4f}")
 
 
-            
-
-
-
-
-
-
-
 class DigitClassificationModel(Module):
     """
     A model for handwritten digit classification using the MNIST dataset.
@@ -189,58 +176,76 @@ class DigitClassificationModel(Module):
     methods here. We recommend that you implement the RegressionModel before
     working on this part of the project.)
     """
+    "*** YOUR CODE HERE ***"
+    
     def __init__(self):
-        # Initialize your model parameters here
+        # Inicializacion con parametros
         super().__init__()
-        input_size = 28 * 28
-        output_size = 10
-        "*** YOUR CODE HERE ***"
-
-
-
-
+        input_size = 28 * 28    # Imagen 28x28
+        output_size = 10        # Clasificacion de digitos 0-9
+        # 3 Capas ocultas: 787 -> 128 -> 64 -> 10
+        self.model = Sequential(
+            Linear(input_size, 128),
+            ReLU(),
+            Linear(128, 64),
+            ReLU(),
+            Linear(64, output_size)
+        )
+       
     def run(self, x):
-        """
-        Runs the model for a batch of examples.
-
-        Your model should predict a node with shape (batch_size x 10),
-        containing scores. Higher scores correspond to greater probability of
-        the image belonging to a particular class.
-
-        Inputs:
-            x: a tensor with shape (batch_size x 784)
-        Output:
-            A node with shape (batch_size x 10) containing predicted scores
-                (also called logits)
-        """
-        """ YOUR CODE HERE """
-
- 
+        # x sera un tensor de dimensiones n,784
+        pred = self.model(x)
+        # Pred sera un tensor de dimensiones n,10 con los valores predichos
+        return pred
 
     def get_loss(self, x, y):
-        """
-        Computes the loss for a batch of examples.
-
-        The correct labels `y` are represented as a tensor with shape
-        (batch_size x 10). Each row is a one-hot vector encoding the correct
-        digit class (0-9).
-
-        Inputs:
-            x: a node with shape (batch_size x 784)
-            y: a node with shape (batch_size x 10)
-        Returns: a loss tensor
-        """
-        """ YOUR CODE HERE """
-
-    
-        
+        criterion = CrossEntropyLoss()
+        pred = self.run(x)
+        return criterion(pred, y)
 
     def train(self, dataset):
-        """
-        Trains the model.
-        """
-        """ YOUR CODE HERE """
+        # Vars del modelo
+        batch_size = 128
+        dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
+        learning_rate = 0.01
+        optimizer = optim.Adam(self.parameters(), lr=learning_rate)
+        # Vars del training
+        epoch = 0
+        wait = 0
+        patience = 3
+        best_va = 0.0
+        
+        # Loop
+        while (True):
+            total_loss = 0.0
+            for batch in dataloader:
+                # Se obtienen los valores x y del batcj
+                x_batch = batch['x'].float()
+                y_batch = batch['label'].float()
 
+                
+                optimizer.zero_grad() # Reinicia Gradiente
+                loss = self.get_loss(x_batch, y_batch) # Obtiene perdida
+                loss.backward() # Gradiente de error
+                optimizer.step() # Actualiza el gradiente con los nuevos pesos
+                total_loss += loss.item() # Acumula error total
+            
+            # VA testing
+            va = dataset.get_validation_accuracy()
+            if va>best_va:
+                best_va = va
+                wait = 0
+            else: # Si va no ha mejorado
+                wait+=1
+                
+            if va>=0.975 or wait>= patience:
+                # Si se obtuvo un va optimo Ó se acabo la paciencia el modelo
+                print(f"Best Epoch {epoch}: VA: {va:.4f}")
+                break
+            else:
+                print(f"Epoch {epoch}: Loss = {total_loss / len(dataloader):.4f} VA: {va:.4f}")
+            
+            epoch+=1
 
 
 class LanguageIDModel(Module):
@@ -327,8 +332,6 @@ class LanguageIDModel(Module):
         """
         "*** YOUR CODE HERE ***"
 
-        
-
 def Convolve(input: tensor, weight: tensor):
     """
     Acts as a convolution layer by applying a 2d convolution with the given inputs and weights.
@@ -350,8 +353,6 @@ def Convolve(input: tensor, weight: tensor):
     
     "*** End Code ***"
     return Output_Tensor
-
-
 
 class DigitConvolutionalModel(Module):
     """
@@ -414,8 +415,6 @@ class DigitConvolutionalModel(Module):
         Trains the model.
         """
         """ YOUR CODE HERE """
-
-
 
 class Attention(Module):
     def __init__(self, layer_size, block_size):
