@@ -134,7 +134,22 @@ class PerceptronDataset(Custom_Dataset):
             self.last_update = time.time()
 
         return {'x': torch.tensor(x, dtype=torch.float32), 'label': torch.tensor(y, dtype=torch.float32)}
-    
+def memoized_cut_rod_aux(p, n, r, c):
+    if r[n] >= 0:
+        return r[n]
+    if n == 0:
+        q = 0
+    else:
+        q = float('-inf')
+        for i in range(1, n + 1):
+            q = max(q, p[i] + memoized_cut_rod_aux(p, n - i, r, c) - (c if n - i > 0 else 0))
+    r[n] = q
+    return q
+
+def memoized_cut_rod(p, n, c):
+    r = [-1] * (n + 1)
+    return memoized_cut_rod_aux(p, n, r, c)
+
 class RegressionDataset(Custom_Dataset):
     def __init__(self, model):
         x = np.expand_dims(np.linspace(-2 * np.pi, 2 * np.pi, num=200), axis=1)

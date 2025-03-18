@@ -454,4 +454,61 @@ class Attention(Module):
 
         """YOUR CODE HERE"""
 
-     
+class PerceptronModel(Module):
+    def __init__(self, dimensions):
+        """
+        Inicializa un nuevo modelo de Perceptrón.
+        
+        Argumentos:
+            dimensions (int): Dimensionalidad de los datos de entrada.
+        """
+        super(PerceptronModel, self).__init__()
+        self.w = Parameter(torch.ones(1, dimensions))  # Forma correcta (1, dimensions)
+    
+    def get_weights(self):
+        """ Devuelve los pesos del perceptrón. """
+        return self.w
+    
+    def run(self, x):
+        """
+        Calcula el producto escalar del vector de peso y la entrada dada.
+        
+        Argumentos:
+            x (Tensor): Tensor de entrada de dimensión (1 x dimensions).
+        
+        Retorna:
+            Tensor: Resultado del producto escalar.
+        """
+        return matmul(x, self.w.T).squeeze()
+    
+    def get_prediction(self, x):
+        """
+        Devuelve la predicción del perceptrón (1 o -1).
+        
+        Argumentos:
+            x (Tensor): Tensor de entrada.
+        
+        Retorna:
+            int: 1 si el producto escalar es no negativo, -1 en caso contrario.
+        """
+        return 1 if self.run(x).item() >= 0 else -1
+    
+    def train(self, dataset):
+        """
+        Entrena el modelo hasta que logre una precisión del 100%.
+        
+        Argumentos:
+            dataset (Dataset): Conjunto de datos para entrenamiento.
+        """
+        with no_grad():
+            dataloader = DataLoader(dataset, batch_size=1, shuffle=True)
+            converged = False
+            while not converged:
+                converged = True
+                for batch in dataloader:
+                    x, label = batch['x'], batch['label']
+                    x = x.view(1, -1)  # Asegurar forma (1, dimensions)
+                    prediction = self.get_prediction(x)
+                    if prediction != label.item():
+                        self.w += (x * label.item())
+                        converged = False
