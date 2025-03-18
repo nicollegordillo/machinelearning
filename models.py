@@ -177,12 +177,13 @@ class DigitClassificationModel(Module):
     working on this part of the project.)
     """
     "*** YOUR CODE HERE ***"
+    
     def __init__(self):
-        # Initialize your model parameters here
+        # Inicializacion con parametros
         super().__init__()
-        input_size = 28 * 28
-        output_size = 10
-        # 3 capas
+        input_size = 28 * 28    # Imagen 28x28
+        output_size = 10        # Clasificacion de digitos 0-9
+        # 3 Capas ocultas: 787 -> 128 -> 64 -> 10
         self.model = Sequential(
             Linear(input_size, 128),
             ReLU(),
@@ -192,76 +193,53 @@ class DigitClassificationModel(Module):
         )
        
     def run(self, x):
-        """
-        Runs the model for a batch of examples.
-
-        Your model should predict a node with shape (batch_size x 10),
-        containing scores. Higher scores correspond to greater probability of
-        the image belonging to a particular class.
-
-        Inputs:
-            x: a tensor with shape (batch_size x 784)
-        Output:
-            A node with shape (batch_size x 10) containing predicted scores
-                (also called logits)
-        """
-        """ YOUR CODE HERE """
+        # x sera un tensor de dimensiones n,784
         pred = self.model(x)
+        # Pred sera un tensor de dimensiones n,10 con los valores predichos
         return pred
-        
 
     def get_loss(self, x, y):
-        """
-        Computes the loss for a batch of examples.
-
-        The correct labels `y` are represented as a tensor with shape
-        (batch_size x 10). Each row is a one-hot vector encoding the correct
-        digit class (0-9).
-
-        Inputs:
-            x: a node with shape (batch_size x 784)
-            y: a node with shape (batch_size x 10)
-        Returns: a loss tensor
-        """
-        """ YOUR CODE HERE """
         criterion = CrossEntropyLoss()
-        pred = self.model(x)
+        pred = self.run(x)
         return criterion(pred, y)
 
     def train(self, dataset):
-        learning_rate = 0.01
+        # Vars del modelo
         batch_size = 128
+        dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
+        learning_rate = 0.01
+        optimizer = optim.Adam(self.parameters(), lr=learning_rate)
+        # Vars del training
         epoch = 0
         wait = 0
         patience = 3
         best_va = 0.0
-        """
-        Trains the model.
-        """
-        """ YOUR CODE HERE """
-        dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
-        optimizer = optim.Adam(self.parameters(), lr=learning_rate)
+        
+        # Loop
         while (True):
             total_loss = 0.0
-            
             for batch in dataloader:
+                # Se obtienen los valores x y del batcj
                 x_batch = batch['x'].float()
                 y_batch = batch['label'].float()
 
-                optimizer.zero_grad()
-                loss = self.get_loss(x_batch, y_batch)
-                loss.backward()
-                optimizer.step()
-                total_loss += loss.item()
+                
+                optimizer.zero_grad() # Reinicia Gradiente
+                loss = self.get_loss(x_batch, y_batch) # Obtiene perdida
+                loss.backward() # Gradiente de error
+                optimizer.step() # Actualiza el gradiente con los nuevos pesos
+                total_loss += loss.item() # Acumula error total
             
+            # VA testing
             va = dataset.get_validation_accuracy()
-            
             if va>best_va:
                 best_va = va
                 wait = 0
-            else:
+            else: # Si va no ha mejorado
                 wait+=1
+                
             if va>=0.975 or wait>= patience:
+                # Si se obtuvo un va optimo Ó se acabo la paciencia el modelo
                 print(f"Best Epoch {epoch}: VA: {va:.4f}")
                 break
             else:
