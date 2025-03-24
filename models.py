@@ -490,7 +490,7 @@ class PerceptronModel(Module):
         Retorna:
             int: 1 si el producto escalar es no negativo, -1 en caso contrario.
         """
-        return 1 if self.run(x).item() >= 0 else -1
+        return 1 if self.run(x).item() >= 0 else -1 #llama a run para el producto escalar x y w si el result es mayor o igual a 0 devuelve 1 y si no -1
     
     def train(self, dataset):
         """
@@ -500,7 +500,7 @@ class PerceptronModel(Module):
             dataset (Dataset): Conjunto de datos para entrenamiento.
         """
         with no_grad():
-            dataloader = DataLoader(dataset, batch_size=1, shuffle=True)
+            dataloader = DataLoader(dataset, batch_size=1, shuffle=True) # Recorre datos uno por uno
             converged = False
             while not converged:
                 converged = True
@@ -508,6 +508,6 @@ class PerceptronModel(Module):
                     x, label = batch['x'], batch['label']
                     x = x.view(1, -1)  # Asegurar forma (1, dimensions)
                     prediction = self.get_prediction(x)
-                    if prediction != label.item():
+                    if prediction != label.item(): #Si está mal clasificado → se actualiza el peso con:
                         self.w += (x * label.item())
                         converged = False
