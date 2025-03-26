@@ -211,9 +211,6 @@ class DigitClassificationModel(Module):
         optimizer = optim.Adam(self.parameters(), lr=learning_rate)
         # Vars del training
         epoch = 0
-        wait = 0
-        patience = 3
-        best_va = 0.0
         
         # Loop
         while (True):
@@ -232,13 +229,8 @@ class DigitClassificationModel(Module):
             
             # VA testing
             va = dataset.get_validation_accuracy()
-            if va>best_va:
-                best_va = va
-                wait = 0
-            else: # Si va no ha mejorado
-                wait+=1
                 
-            if va>=0.975 or wait>= patience:
+            if va>=0.975:
                 # Si se obtuvo un va optimo Ó se acabo la paciencia el modelo
                 print(f"Best Epoch {epoch}: VA: {va:.4f}")
                 break
